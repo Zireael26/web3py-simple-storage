@@ -48,6 +48,8 @@ SimpleStorage = w3.eth.contract(abi=abi, bytecode=bytecode)
 nonce = w3.eth.getTransactionCount(my_address)
 gas_price = w3.eth.gas_price
 
+print("Deploying contract...")
+
 # 1. Build a transaction
 # 2. Sign the transaction
 # 3. Send the transaction
@@ -59,6 +61,7 @@ signed_txn = w3.eth.account.sign_transaction(transaction, private_key=private_ke
 
 txn_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 txn_recipt = w3.eth.wait_for_transaction_receipt(txn_hash)
+print("Contract successfully deployed....")
 
 # Working with the contrct
 #  We need two things to work with a contract
@@ -69,4 +72,18 @@ simple_storage = w3.eth.contract(address=txn_recipt.contractAddress, abi=abi)
 # We can interact with functions in the contract with
 # Call -> To simulate making a call and getting a return value (do not make a state change)
 # Transact -> To actually make a state change
-print(simple_storage.functions.retrieve().call())
+
+# Initial vaklue of favorite number
+print(
+    "Initial value of favoriteNumber:" + str(simple_storage.functions.retrieve().call())
+)
+print("Initiating store() transaction...")
+store_tx = simple_storage.functions.store(19000).buildTransaction(
+    {"chainId": chain_id, "from": my_address, "nonce": nonce + 1, "gasPrice": gas_price}
+)
+signed_store_tx = w3.eth.account.sign_transaction(store_tx, private_key=private_key)
+store_txn_hash = w3.eth.send_raw_transaction(signed_store_tx.rawTransaction)
+store_txn_recipt = w3.eth.wait_for_transaction_receipt(store_txn_hash)
+print(
+    "Updated value of favoriteNumber:" + str(simple_storage.functions.retrieve().call())
+)
